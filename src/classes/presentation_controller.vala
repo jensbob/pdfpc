@@ -823,5 +823,6 @@ namespace pdfpc {
             tm.strptime( t + ":00", "%H:%M:%S" );
             return tm.mktime();
         }
+
     }
 }

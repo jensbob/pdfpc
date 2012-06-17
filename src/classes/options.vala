@@ -34,7 +34,7 @@ namespace pdfpc {
         /**
          * Commandline option two force two windows, even if only one screen is attached
          */
-        public static bool force_two_windows = false;
+        public static string? force_two_windows = null;
         /**
          * Commandline option to force using only one screen.
          */

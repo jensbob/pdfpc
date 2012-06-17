@@ -74,7 +74,7 @@ namespace pdfpc {
             { "black-on-end", 'b', 0, 0, ref Options.black_on_end, "Add an additional black slide at the end of the presentation", null },
             { "single-screen", 'S', 0, 0, ref Options.single_screen, "Force to use only one screen", null },
             { "windowed", 'w', 0, 0, ref Options.windowed, "Run in windowed mode (devel tool)", null},
-            { "force-two-windows", 'f', 0, 0, ref Options.force_two_windows, "Force to open the presentation window even if only one screen is present", null},
+            { "force-two-windows", 'f', 0, OptionArg.STRING, ref Options.force_two_windows, "Force to open the presentation window even if only one screen is present (width:height)", "R"},
             { null }
         };
 
@@ -179,7 +179,7 @@ namespace pdfpc {
                     if ( !Options.display_switch) {
                         this.presenter_window =
                             this.create_presenter_window( metadata, -1 );
-		        if ( Options.force_two_windows) {
+		        if ( Options.force_two_windows != null) {
                             this.presentation_window =
                                 this.create_presentation_window( metadata, -1 );
                         }
@@ -187,7 +187,7 @@ namespace pdfpc {
                     else {
                         this.presentation_window =
                             this.create_presentation_window( metadata, -1 );
-                        if ( Options.force_two_windows) {
+                        if ( Options.force_two_windows != null) {
                             this.presenter_window =
                                 this.create_presenter_window( metadata, -1 );
 			}
