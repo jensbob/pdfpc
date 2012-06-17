@@ -1,4 +1,5 @@
 /**
+
  * Main application file
  *
  * This file is part of pdfpc.
