@@ -31,7 +31,10 @@ namespace pdfpc {
          * should be switched.
          */
         public static bool display_switch = false;
-
+        /**
+         * Commandline option two force two windows, even if only one screen is attached
+         */
+        public static bool force_two_windows = false;
         /**
          * Commandline option to force using only one screen.
          */

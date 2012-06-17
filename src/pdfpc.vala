@@ -1,5 +1,5 @@
-/**
 
+/**
  * Main application file
  *
  * This file is part of pdfpc.
@@ -74,6 +74,7 @@ namespace pdfpc {
             { "black-on-end", 'b', 0, 0, ref Options.black_on_end, "Add an additional black slide at the end of the presentation", null },
             { "single-screen", 'S', 0, 0, ref Options.single_screen, "Force to use only one screen", null },
             { "windowed", 'w', 0, 0, ref Options.windowed, "Run in windowed mode (devel tool)", null},
+            { "force-two-windows", 'f', 0, 0, ref Options.force_two_windows, "Force to open the presentation window even if only one screen is present", null},
             { null }
         };
 
@@ -175,12 +176,22 @@ namespace pdfpc {
                 this.presentation_window =
                     this.create_presentation_window( metadata, -1 );
             } else {
-                    if ( !Options.display_switch)
+                    if ( !Options.display_switch) {
                         this.presenter_window =
                             this.create_presenter_window( metadata, -1 );
-                    else
+		        if ( Options.force_two_windows) {
+                            this.presentation_window =
+                                this.create_presentation_window( metadata, -1 );
+                        }
+                    }
+                    else {
                         this.presentation_window =
                             this.create_presentation_window( metadata, -1 );
+                        if ( Options.force_two_windows) {
+                            this.presenter_window =
+                                this.create_presenter_window( metadata, -1 );
+			}
+                    }
             }
 
             // The windows are always displayed at last to be sure all caches have
