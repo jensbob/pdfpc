@@ -23,7 +23,6 @@
 using Gtk;
 using Gdk;
 
-
 using pdfpc;
 
 namespace pdfpc.Window {
@@ -48,61 +47,31 @@ namespace pdfpc.Window {
         public Presentation( Metadata.Pdf metadata, int screen_num, PresentationController presentation_controller ) {
             base( screen_num );
 
-
-	    // get width and height for forced window
-	    int forced_height = 0;
-	    int forced_width = 0;
-
-	    if ( Options.force_two_windows != null ) 
-            {
-                forced_height = this.parseHeight( 
-                    Options.force_two_windows 
-                );
-                forced_width = this.parseWidth( 
-                    Options.force_two_windows 
-                );
-            }
-
-
             this.destroy.connect( (source) => {
-                Gtk.main_quit();
+                presentation_controller.quit();
             } );
 
             this.presentation_controller = presentation_controller;
-            this.presentation_controller.register_controllable( this );
 
             Color black;
             Color.parse( "black", out black );
             this.modify_bg( StateType.NORMAL, black );
 
             var fixedLayout = new Fixed();
-	    if ( Options.force_two_windows == null)
-               fixedLayout.set_size_request(this.screen_geometry.width, this.screen_geometry.height);
-	    else
-		 fixedLayout.set_size_request(forced_width,forced_height);
+            fixedLayout.set_size_request(this.screen_geometry.width, this.screen_geometry.height);
             this.add( fixedLayout );
             
             Rectangle scale_rect;
-           
-            if ( Options.force_two_windows == null)
-               this.view = View.Pdf.from_metadata( 
-                  metadata,
-                  this.screen_geometry.width, 
-                  this.screen_geometry.height,
-                  Options.black_on_end,
-                  this.presentation_controller,
-                  out scale_rect
-               );
-            else
-               this.view = View.Pdf.from_metadata( 
-                  metadata,
-                  forced_width, 
-                  forced_height,
-                  Options.black_on_end,
-                  this.presentation_controller,
-                  out scale_rect
-               );
-
+            
+            this.view = View.Pdf.from_metadata( 
+                metadata,
+                this.screen_geometry.width, 
+                this.screen_geometry.height,
+                Options.black_on_end,
+                true,
+                this.presentation_controller,
+                out scale_rect
+            );
 
             if ( !Options.disable_caching ) {
                 ((Renderer.Caching)this.view.get_renderer()).set_cache( 
@@ -127,6 +96,8 @@ namespace pdfpc.Window {
             this.key_press_event.connect( this.on_key_pressed );
             this.button_press_event.connect( this.on_button_press );
             this.scroll_event.connect( this.on_scroll );
+
+            this.presentation_controller.register_controllable( this );
         }
 
         /**
@@ -232,22 +203,12 @@ namespace pdfpc.Window {
                 observer.monitor_view( prerendering_view );
             }
         }
-	/**	
-         * Parse the given resolution string to the width
-         */
-        private int parseHeight( string s ) 
-        {
-            string res[2] = s.split(":",0);
-            return int.parse(res[1]);
-         }
-/**	
-         * Parse the given resolution string to the width
-         */
-        private int parseWidth( string s ) 
-        {
-            string res[2] = s.split(":",0);
-            return int.parse(res[0]);
-        }        
 
+        /**
+         * The only view is the main view.
+         */
+        public View.Pdf? get_main_view() {
+            return this.view as View.Pdf;
+        }
     }
 }

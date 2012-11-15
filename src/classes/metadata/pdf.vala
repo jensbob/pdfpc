@@ -29,7 +29,7 @@ namespace pdfpc.Metadata {
     public class Pdf: Base
     {
         protected string? pdf_fname = null;
-        protected string? pdf_url = null;
+        public string? pdf_url = null;
         protected string? pdfpc_url = null;
 
         /**
@@ -190,6 +190,15 @@ namespace pdfpc.Metadata {
         }
 
         /**
+         * Called on quit
+         */
+        public void quit() {
+            this.save_to_disk();
+            foreach (var mapping in this.action_mapping)
+                mapping.deactivate();
+        }
+
+        /**
          * Save the metadata to disk, if needed (i.e. if the user did something
          * with the notes or the skips)
          */
@@ -257,6 +266,25 @@ namespace pdfpc.Metadata {
         }
 
         /**
+         * Fill the slide notes from pdf text annotations.
+         */
+        private void notes_from_document() {
+            for(int i = 0; i < this.page_count; i++) {
+                var page = this.document.get_page(i);
+                List<Poppler.AnnotMapping> anns = page.get_annot_mapping();
+                foreach(unowned Poppler.AnnotMapping am in anns) {
+                    var a = am.annot;
+                    switch(a.get_annot_type()) {
+                        case Poppler.AnnotType.TEXT:
+                            this.notes.set_note(a.get_contents(), real_slide_to_user_slide(i));
+                            break;
+                    }
+                }
+                //page.free_annot_mapping(anns);
+            }
+        }
+
+        /**
          * Base constructor taking the file url to the pdf file
          */
         public Pdf( string fname ) {
@@ -294,6 +322,10 @@ namespace pdfpc.Metadata {
             } else {
                 parse_skip_line(skip_line);
             }
+
+            // Prepopulate notes from annotations
+            notes_from_document();
+
             MutexLocks.poppler.unlock();
         }
     
@@ -464,6 +496,60 @@ namespace pdfpc.Metadata {
             MutexLocks.poppler.unlock();
 
             return document;
+        }
+
+        /**
+         * Variables used to keep track of the action mappings for the current
+         * page.
+         */
+        private int mapping_page_num = -1;
+        private GLib.List<ActionMapping> action_mapping;
+        private ActionMapping[] blanks = {new ControlledMovie(), new LinkAction()};
+        public weak PresentationController controller = null;
+
+        /**
+         * Return the action mappings (link and annotation mappings) for the
+         * specified page.  If that page is different from the previous one,
+         * destroy the existing action mappings and create new mappings for
+         * the new page.
+         */
+        public unowned GLib.List<ActionMapping> get_action_mapping( int page_num ) {
+            if (page_num != this.mapping_page_num) {
+                foreach (var mapping in this.action_mapping)
+                    mapping.deactivate();
+                this.action_mapping = null; //.Is this really the correct way to clear a list?
+
+                GLib.List<Poppler.LinkMapping> link_mappings;
+                link_mappings = this.get_document().get_page(page_num).get_link_mapping();
+                foreach (unowned Poppler.LinkMapping mapping in link_mappings) {
+                    foreach (var blank in blanks) {
+                        var action = blank.new_from_link_mapping(mapping, this.controller, this.document);
+                        if (action != null) {
+                            this.action_mapping.append(action);
+                            break;
+                        }
+                    }
+                }
+                // Free the mapping memory; already in lock
+                //Poppler.Page.free_link_mapping(link_mappings);
+
+                GLib.List<Poppler.AnnotMapping> annot_mappings;
+                annot_mappings = this.get_document().get_page(page_num).get_annot_mapping();
+                foreach (unowned Poppler.AnnotMapping mapping in annot_mappings) {
+                    foreach (var blank in blanks) {
+                        var action = blank.new_from_annot_mapping(mapping, this.controller, this.document);
+                        if (action != null) {
+                            this.action_mapping.append(action);
+                            break;
+                        }
+                    }
+                }
+                // Free the mapping memory; already in lock
+                //Poppler.Page.free_annot_mapping(annot_mappings);
+
+                this.mapping_page_num = page_num;
+            }
+            return this.action_mapping;
         }
     }
 }

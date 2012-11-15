@@ -1,4 +1,3 @@
-
 /**
  * Main application file
  *
@@ -73,8 +72,8 @@ namespace pdfpc {
             { "disable-compression", 'z', 0, 0, ref Options.disable_cache_compression, "Disable the compression of slide images to trade memory consumption for speed. (Avg. factor 30)", null },
             { "black-on-end", 'b', 0, 0, ref Options.black_on_end, "Add an additional black slide at the end of the presentation", null },
             { "single-screen", 'S', 0, 0, ref Options.single_screen, "Force to use only one screen", null },
+            { "list-actions", 'L', 0, 0, ref Options.list_actions, "List actions supported in the config file(s)", null},
             { "windowed", 'w', 0, 0, ref Options.windowed, "Run in windowed mode (devel tool)", null},
-            { "force-two-windows", 'f', 0, OptionArg.STRING, ref Options.force_two_windows, "Force to open the presentation window even if only one screen is present (width:height)", "R"},
             { null }
         };
 
@@ -82,10 +81,9 @@ namespace pdfpc {
          * Parse the commandline and apply all found options to there according
          * static class members.
          *
-         * On error the usage help is shown and the application terminated with an
-         * errorcode 1
+		 * Returns the name of the pdf file to open (or null if not present)
          */
-        protected void parse_command_line_options( string[] args ) {
+        protected string? parse_command_line_options( string[] args ) {
             var context = new OptionContext( "<pdf-file>" );
 
             context.add_main_entries( options, null );
@@ -98,11 +96,11 @@ namespace pdfpc {
                 stderr.printf( "%s", context.get_help( true, null ) );
                 Posix.exit( 1 );
             }
-
-            if ( args.length != 2 ) {
-                stderr.printf( "%s", context.get_help( true, null ) );
-                Posix.exit( 1 );
-            }
+            if ( args.length < 2 ) {
+				return null;
+            } else {
+				return args[1];
+			}
         }
 
         /**
@@ -134,21 +132,37 @@ namespace pdfpc {
          * initializes the Gtk system.
          */
         public void run( string[] args ) {
-            stdout.printf( "pdfpc v3.0\n"
+            stdout.printf( "pdfpc v3.1.1\n"
                            + "(C) 2012 David Vilar\n"
                            + "(C) 2009-2011 Jakob Westhoff\n\n" );
 
             Gdk.threads_init();
             Gtk.init( ref args );
+            Gst.init( ref args );
+
+            string pdfFilename = this.parse_command_line_options( args );
+            if (Options.list_actions) {
+				stdout.printf("Config file commands accepted by pdfpc:\n");
+				string[] actions = PresentationController.getActionDescriptions();
+				for (int i = 0; i < actions.length; i+=2) {
+					string tabAlignment = "\t";
+					if (actions[i].length < 8)
+						tabAlignment += "\t";
+					stdout.printf("\t%s%s=> %s\n", actions[i], tabAlignment, actions[i+1]);
+				}
+                return;
+            }
+			if (pdfFilename == null) {
+				stderr.printf( "Error: No pdf file given\n");
+				Posix.exit(1);
+			}
 
             // Initialize the application wide mutex objects
             MutexLocks.init();
 
-            this.parse_command_line_options( args );
-
             stdout.printf( "Initializing rendering...\n" );
 
-            var metadata = new Metadata.Pdf( args[1] );
+            var metadata = new Metadata.Pdf( pdfFilename );
             if ( Options.duration != 987654321u )
                 metadata.set_duration(Options.duration);
 
@@ -157,6 +171,9 @@ namespace pdfpc {
             this.controller = new PresentationController( metadata, Options.black_on_end );
             this.cache_status = new CacheStatus();
 
+            ConfigFileReader configFileReader = new ConfigFileReader(this.controller);
+            configFileReader.readConfig(etc_path + "/pdfpcrc");
+            configFileReader.readConfig(Environment.get_home_dir() + "/.pdfpcrc");
 
             var screen = Gdk.Screen.get_default();
             if ( !Options.windowed && !Options.single_screen && screen.get_n_monitors() > 1 ) {
@@ -166,32 +183,22 @@ namespace pdfpc {
                 else
                     presenter_monitor    = (screen.get_primary_monitor() + 1) % 2;
                 presentation_monitor = (presenter_monitor + 1) % 2;
-                this.presentation_window = 
-                    this.create_presentation_window( metadata, presentation_monitor );
                 this.presenter_window = 
                     this.create_presenter_window( metadata, presenter_monitor );
+                this.presentation_window = 
+                    this.create_presentation_window( metadata, presentation_monitor );
             } else if (Options.windowed && !Options.single_screen) {
                 this.presenter_window =
                     this.create_presenter_window( metadata, -1 );
                 this.presentation_window =
                     this.create_presentation_window( metadata, -1 );
             } else {
-                    if ( !Options.display_switch) {
+                    if ( !Options.display_switch)
                         this.presenter_window =
                             this.create_presenter_window( metadata, -1 );
-		        if ( Options.force_two_windows != null) {
-                            this.presentation_window =
-                                this.create_presentation_window( metadata, -1 );
-                        }
-                    }
-                    else {
+                    else
                         this.presentation_window =
                             this.create_presentation_window( metadata, -1 );
-                        if ( Options.force_two_windows != null) {
-                            this.presenter_window =
-                                this.create_presenter_window( metadata, -1 );
-			}
-                    }
             }
 
             // The windows are always displayed at last to be sure all caches have
@@ -206,7 +213,6 @@ namespace pdfpc {
                 this.presenter_window.update();
             }
 
-            
             // Enter the Glib eventloop
             // Everything from this point on is completely signal based
             Gdk.threads_enter();

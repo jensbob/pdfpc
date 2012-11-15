@@ -1,4 +1,4 @@
-.TH  pdfpc "1" "May 2012" 
+.TH  pdfpc "1" "Jun 2012" 
 
 .SH NAME
 pdfpc \- pdf presentater console with multi-monitor support
@@ -28,7 +28,7 @@ pdfpc file.pdf
 By default the presenter view appears in the primary monitor and the
 presentation view in the second monitor (provided you have two
 monitors).
-If you want to swith displays, start with the -s option (see below).
+If you want to swith displays, start with the \-s option (see below).
 
 .SH OPTIONS
 .TP
@@ -37,45 +37,45 @@ Duration in minutes of the presentation used for timer display. If not given or
 if a value of 0 is specified, the clock just measures the time in the
 presentation.
 .TP
-.BI "\-e, \-\-end-time"=T
+.BI "\-e, \-\-end\-time"=T
 End time of the presentation. (Format: HH:MM (24h))
 .TP
-.BI "\-t, \-\-start-time"=T
-Start time of the presentation to be used as a countdown. (Format: HH:MM (24h))
-.TP
-.BI "\-l, \-\-last-minutes"=N
+.BI "\-l, \-\-last\-minutes"=N
 Time in minutes, from which on the timer changes its color. (Default 5 minutes)
 .TP
-.BI "\-u, \-\-current-size"=N
+.BI "\-t, \-\-start\-time"=T
+Start time of the presentation to be used as a countdown. (Format: HH:MM (24h))
+.TP
+.BI "\-u, \-\-current\-size"=N
 Percentage of the presenter screen to be used for the current slide.  (Default 60)
 .TP
-.BI "\-o, \-\-overview-min-size"=N
+.BI "\-o, \-\-overview\-min\-size"=N
 Minimum width for the overview miniatures, in pixels. (Default 150)
 .TP
-.BI "\-s, \-\-switch-screens"
+.BI "\-s, \-\-switch\-screens"
 Switch the presentation and the presenter screen.
 .TP
-.BI "\-c, \-\-disable-cache"
+.BI "\-c, \-\-disable\-cache"
 Disable caching and pre-rendering of slides to save memory at the cost of speed.
 .TP
-.BI "\-z, \-\-disable-compression"
+.BI "\-z, \-\-disable\-compression"
 Disable the compression of slide images to trade memory consumption for speed.
 (Avg.  factor 30)
 .TP
-.BI "\-b, \-\-black-on-end"
+.BI "\-b, \-\-black\-on\-end"
 Add an additional black slide at the end of the presentation
 .TP
-.BI "\-S, \-\-single-screen"
+.BI "\-S, \-\-single\-screen"
 Force to use only one screen
 .TP
-.BI "\-f, \-\-force-two-windows"=R
-Forces the display of the presentation window with a given resolution even when no second screen is present. (Format: width:height)
+.BI "\-L, \-\-list\-actions"
+List actions supported in the config file(s)
 .TP
 .BI "\-h, \-\-help"
 Shows the help
 
 .SH KEYBINDINGS
-During the presentation following key strokes and mouse clicks are supported:
+These are the default keybindings for pdfpc:
 .TP
 .B Right cursor key / Page down / Return / Space / Left mouse button
 Go forward one slide
@@ -84,7 +84,9 @@ Go forward one slide
 Go forward 10 slides
 .TP
 .B Down cursor key
-Go forward one user slide (see section about overlays below)
+Go forward one user slide (see
+.B Overlays
+below)
 .TP
 .B Left cursor key / Page up / Right mouse button / Mouse wheel up or left
 Go back one slide
@@ -93,7 +95,9 @@ Go back one slide
 Go back 10 slides
 .TP
 .B Up cursor key
-Go back one "user slide" (see section about overlays below)
+Go back one "user slide" (see
+.B Overlays
+below)
 .TP
 .B Home
 Go to the first slide
@@ -104,8 +108,8 @@ Go to the last slide
 .B Backspace
 Go back in history. Note that history is defined by "jump" commands, not by normal slide movement.
 .TP
-.B Tab
-Toggle overview mode
+.B Tab / Middle mouse button
+Overview mode
 .TP
 .B g
 Input a slide number to jump to
@@ -135,6 +139,10 @@ Reset presentation (reset timer and go back to first slide)
 .TP
 .B e
 Define end slide
+.P
+See
+.B CONFIG FILE
+below if you want to customize the keybindings.
 
 .SH FEATURES
 
@@ -143,13 +151,13 @@ Define end slide
 To allow fast changes between the different slides of the presentation the pdf
 pages are prerendered to memory.  The progress bar on the bottom of the
 presenter screen indicates how many percent of the slides have been
-pre-rendered already.  During the initial rendering phase this will slow-down
+pre-rendered already.  During the initial rendering phase this will slow down
 slide changes, as most cpu power is used for the rendering process in the
 background.  After the cache is fully primed however the changing of slides
 should be much faster, as with normal pdf viewers.
 
 As the prerendering takes a lot of memory it can be disabled using the
-\-\-disable-cache switch at the cost of speed.
+\-\-disable\-cache switch at the cost of speed.
 .SS Cache compression
 
 The prerendered and cached slides can be compressed in memory to save up some
@@ -163,11 +171,10 @@ prerendering you can disable slide compression by using the \-z switch. But be
 warned using the uncompressed prerendering storage will use about 30 times the
 memory the new compressed storage utilizes (aka the 1.5gb become about 50mb)
 
-
 .SS Timer
-If a duration is given (-d option), the timer will show a countdown with the
+If a duration is given (\-d option), the timer will show a countdown with the
 given parameters.  If no duration is specified (or if a value of 0 is given to
-the -d option), the timer will show how much time has been spent.  The duration
+the \-d option), the timer will show how much time has been spent.  The duration
 is stored automatically, so you do not need to repeat it for every invocation.
 
 The timer is started if you are navigating away from the first page for the
@@ -272,9 +279,89 @@ Future versions may include external tools for dealing with this case
 automatically.
 .PP
 The files are plain-text files that should be fairly self-explanatory.
-A couple of things to note - The slide numbers of the notes refer to
-user slides - The [notes] sections must be the last one in the file -
+A couple of things to note:
+.IP \[bu] 2
+The slide numbers of the notes refer to user slides
+.IP \[bu] 2
+The [notes] sections must be the last one in the file
+.IP \[bu] 2
 For the programmers out there: slide indexes start at 1
+.PP
+
+.SH CONFIG FILE
+
+The main configuration file for pdfpc is located in /usr/local/etc/pdfpcrc.
+Additionally, $HOME/.pdfpcrc is also read, if present. Following commands are
+aceepted
+.TP
+.B bind <key> <func>
+Bind a key to a function
+.TP
+.B unbind <key>
+Unbinds the given key
+.TP
+.B unbind_all
+Unbinds all the keybindings
+.TP
+.B mouse <button> <func>
+Binds a mouse button to a function
+.TP
+.B unmouse <button>
+Unbinds a mouse button
+.TP
+.B unmouse_all
+Unbinds all the mouse bindings
+.TP
+.B switch-screens
+Switches screens, in the same way as the command line parameter with the same
+name.
+.P
+Key names can be obtained with the help of the xev utility. Note that
+names are case sensitive. Modifiers can be specified in the form
+<mod>+<key> where <mod> is one of S (for shift), C (for control) and
+A/M (for Alt/Meta). E.g.
+.TP
+bind S+Next    next10
+.P
+A list of all possible functions can be obtained
+via the \-L command line option.
+
+Under
+.I http://davvil.github.com/pdfpc#configs 
+you can find some configuration files for commonly used devices
+(wireles presenters, bluetooth headesets, ...). If your device is not
+yet supported and you generated a working config file, please
+contribute it (see contact information below).
+
+.SS Movies
+
+Pdfpc can play back movies included in the PDF file.  Movies may be started
+and stopped by clicking within their area.  For the presenter, a progress
+bar is drawn along the bottom of the movie.  This expands when the mouse
+hovers over it, allowing one to seek by clicking or dragging within the
+progress bar.  Switching slides automatically stops playback, and movies
+will be reset after leaving and returning to a slide.
+
+Movies may be included in PDF files as "screen annotations".  pdfpc does
+not yet support options that modify the playback of these movies.  In LaTeX,
+such movies may be added to a presentation with the "movie15" package.
+Note that the poster, autoplay, and repeat options are not yet supported.
+(Also, run ps2pdf with the -dNOSAFER flag.)
+
+As a perhaps simpler option, pdfpc will play back movies linked from a
+hyperlink of type "launch".  A query string may be added to the URL of the
+movie to enable the "autostart" and "loop" properties.  (E.g., a link to
+"movie.avi?autostart&loop" will start playing automatically, and loop when
+it reaches the end.)  In LaTeX, such links are created with
+
+.RS
+\\usepackage{hyperref}
+.br
+\\href{run:<movie file>}{<placeholder content>}
+.RE
+
+The movie will playback in the area taken by the placeholder content.  Using
+a frame of the movie will ensure the correct aspect ratio.
 
 .SH BUGS
 
